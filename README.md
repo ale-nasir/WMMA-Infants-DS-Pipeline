@@ -21,8 +21,7 @@ This script calls the following as well:
    - Run_dmriprep_tract_wrapper.script 
    - Run_dmriprep_wrapper.script 
 
-3_DWIMask_NIRAL.script  
-Creates low-shell DWI images (for tensor computation) and generates automated DWI brain masks. Final output is a subject-specific Brainmask_0.5.7 folder. 
+3_DWIMask_NIRAL.script  -> Creates low-shell DWI images (for tensor computation) and generates automated DWI brain masks. Final output is a subject-specific Brainmask_0.5.7 folder. 
 
 Automated brain masks are then reviewed and manually corrected using ITK-SNAP 4.0.2. 
 
@@ -37,25 +36,25 @@ Subjects are excluded at this stage if:
 - Frontal lobe is impacted by the temporal arc artifact 
 
 After Final QC, two scripts are executed: 
-4_MoreQCstats.script => Computes motion stat csv 
+4_MoreQCstats.script -> Computes motion stat csv 
 
-5_NODDI.script => Computes NODDI maps (creates AMICO folders for subjects) 
-   a. calls Run_AMICO_wrapper.script 
+5_NODDI.script -> Computes NODDI maps (creates AMICO folders for subjects) 
+   - Calls Run_AMICO_wrapper.script 
 
 ATLAS_MAPPING 
-2_MapOtherDataInAtlas.script => Maps all data into DTI atlas with tracts 
+2_MapOtherDataInAtlas.script -> Maps all data into DTI atlas with tracts 
    
-3_MapNODDItoAtlas.script => Maps all NODDI data into atlas 
+3_MapNODDItoAtlas.script -> Maps all NODDI data into atlas 
 
 FIBER_PROCESSING 
-dtitractstat.script => Generates fiber profiles for DTI maps 
+dtitractstat.script -> Generates fiber profiles for DTI maps 
 
-dtitractstat_NODDI.script => Generates fiber profiles for NODDI maps 
+dtitractstat_NODDI.script -> Generates fiber profiles for NODDI maps 
 
-GatherCSV_NODDI.script => Generates CSV for NODDI maps   
-   a. calls RunGather.script 
+GatherCSV_NODDI.script -> Generates CSV for NODDI maps   
+   - Calls RunGather.script 
    
-GatherCSV.script => Generates CSV for DTI profiles  
-     a. calls RunGather.script 
+GatherCSV.script -> Generates CSV for DTI profiles  
+   - Calls RunGather.script 
      
-RunCompute_oazrak.script => Computing tract averages for subjects 
+RunCompute_oazrak.script -> Computes tract averages for subjects 
