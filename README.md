@@ -43,12 +43,14 @@ After Final QC, two scripts are executed:
 5_NODDI.script -> Computes NODDI maps (creates AMICO folders for subjects) 
    - Calls Run_AMICO_wrapper.script 
 
-ATLAS_MAPPING 
+ATLAS_MAPPING : Two scripts are executed
+
 2_MapOtherDataInAtlas.script -> Maps all data into DTI atlas with tracts 
    
 3_MapNODDItoAtlas.script -> Maps all NODDI data into atlas 
 
-FIBER_PROCESSING 
+FIBER_PROCESSING : 5 scripts are executed
+
 dtitractstat.script -> Generates fiber profiles for DTI maps 
 
 dtitractstat_NODDI.script -> Generates fiber profiles for NODDI maps 
