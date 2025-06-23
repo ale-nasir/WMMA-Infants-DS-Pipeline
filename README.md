@@ -36,6 +36,7 @@ Subjects are excluded at this stage if:
 - Frontal lobe is impacted by the temporal arc artifact 
 
 After Final QC, two scripts are executed: 
+
 4_MoreQCstats.script -> Computes motion stat csv 
 
 5_NODDI.script -> Computes NODDI maps (creates AMICO folders for subjects) 
