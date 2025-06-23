@@ -1,0 +1,63 @@
+#!/bin/tcsh -f
+
+# Direct iterative atlas building
+# Map Data in atlas
+
+set nonomatch
+
+#set BaseDir  = /ASD/Autism2/IBIS1/IBIS/Proc_Data/DTI_analysis/DTIAtlases_April_2023/AllCMRR_April24_0_5_7b12/MapInAtlas
+set BaseDir  = /ASD/Autism2/IBIS1/IBIS/EP_infantDS_Studies/Proc_Data/FinalAtlas/MapInAtlas/
+set PROCDIR  = $BaseDir/Processing
+
+#echo /ASD/Autism/IBIS/Proc_Data/*/VSA*CVD*/native/
+
+set Cases = ( $BaseDir/Data/*_lowShell_DTI.nrrd)
+
+#set allCases = ( `cat path_to_NotInAtlas.txt` )
+# need to generate diffusion 
+
+set numThreads = 4
+
+#atlas setup
+set DTIAtlas = $PROCDIR/FinalAtlasDTI_float.nrrd
+
+#tool setup
+set DTIregCMD = /tools/bin_linux64/DTI-Reg
+set ANTSCMD   = /tools/ANTS/ANTSv2.2.0/bin/ANTS
+set WarpCMD   = /tools/ANTS/ANTSv2.2.0/bin/WarpImageMultiTransform
+set BRAINSFitCMD = /tools/bin_linux64/BRAINSFit
+
+set OutputDir = $BaseDir/DataInAtlas
+if (! -e $OutputDir) mkdir $OutputDir
+
+foreach dtiImage ( $Cases )
+
+	if (! -e $dtiImage) then
+	    echo $dtiImage does not exist
+	    exit
+	endif
+
+        echo doing $dtiImage
+
+        set targetDTI = $OutputDir/$dtiImage:t:r:s/_masked_finalVC_lowShell_DTI//_DeformedDTI.nrrd 
+	echo $targetDTI
+
+        if (! -e $targetDTI) then
+                echo mapping into atlas: $targetDTI:t
+		dtiprocess --dti_image $dtiImage -f $OutputDir/$dtiImage:t:r_FA.nrrd
+		dtiprocess --dti_image $DTIAtlas -f $OutputDir/$DTIAtlas:t:r_FA.nrrd
+
+		set initAffine = $targetDTI:r:s/DeformedDTI/initAffine/.txt 
+
+		$BRAINSFitCMD --fixedVolume $OutputDir/$DTIAtlas:t:r_FA.nrrd --movingVolume $OutputDir/$dtiImage:t:r_FA.nrrd --initializeTransformMode useMomentsAlign --useAffine --numberOfSamples 1000000 --linearTransform $initAffine --outputVolume $targetDTI:s/DeformedDTI/initAffine_FA/
+
+		$DTIregCMD --fixedVolume $DTIAtlas --movingVolume $dtiImage --outputFolder $OutputDir --scalarMeasurement FA --ANTSUseHistogramMatching --method useScalar-ANTS --ANTSRegistrationType GreedyDiffeo --ANTSTransformationStep 0.25 --ANTSIterations 100x50x20 --ANTSSimilarityMetric CC --ANTSSimilarityParameter 2 --ANTSGaussianSigma 2 --outputVolume $targetDTI --outputDisplacementField $targetDTI:r_GlobalDisplacementField.nrrd --outputInverseDeformationFieldVolume $targetDTI:r_InverseGlobalDisplacementField.nrrd --ANTSPath $ANTSCMD --WarpImageMultiTransformPath $WarpCMD --numberOfThreads $numThreads --initialAffine $initAffine
+
+		dtiprocess --dti_image $targetDTI -f $targetDTI:s/DeformedDTI/DeformedFA/  --correction abs
+
+        endif
+end
+
+
+exit
+

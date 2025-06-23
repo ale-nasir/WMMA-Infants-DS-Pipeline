@@ -1,0 +1,59 @@
+#!/bin/tcsh -f
+
+# Direct iterative atlas building
+# Map Data in atlas
+
+set nonomatch
+
+set DataDir = /ASD/Autism/IBIS/EP_infantDS_Studies/Proc_Data/
+set BaseDir  = /ASD/Autism2/IBIS1/IBIS/EP_infantDS_Studies/Proc_Data/DTI_analysis/FinalAtlas/MapInAtlas/
+set PROCDIR  = /ASD/Autism2/IBIS1/IBIS/EP_infantDS_Studies/Proc_Data/DTI_analysis/FinalAtlas/MapInAtlas/Processing
+
+
+set NDICases = ( $DataDir/*/*/mri/native/dMRI/AMICO_NODDI/*_NDI.nii.gz)
+
+#set allCases = ( `cat path_to_NotInAtlas.txt` )
+# need to generate diffusion 
+
+set numThreads = 4
+
+#atlas setup
+set DTIAtlas = $PROCDIR/FinalAtlasDTI_FA.nrrd
+
+#tool setup
+set DTIregCMD = /tools/bin_linux64/DTI-Reg
+set ANTSCMD   = /tools/ANTS/ANTSv2.2.0/bin/ANTS
+set WarpCMD   = /tools/ANTS/ANTSv2.2.0/bin/WarpImageMultiTransform
+set BRAINSFitCMD = /tools/bin_linux64/BRAINSFit
+
+set OutputDir = $BaseDir/DataInAtlas
+if (! -e $OutputDir) mkdir $OutputDir
+
+foreach ndiImage ( $NDICases )
+
+	if (! -e $ndiImage) then
+	    echo $ndiImage does not exist
+	    exit
+	endif
+
+	set subject = $ndiImage:h:h:h:h:h:h:t
+	set visit   = $ndiImage:h:h:h:h:h:t
+        echo doing $subject - $visit - $ndiImage:t
+
+        set targetDTI = $OutputDir/${subject}_${visit}_DeformedDTI.nrrd
+	set DefField  = $OutputDir/${subject}_${visit}_DeformedDTI_GlobalDisplacementField.nrrd
+	set targetNDI = $OutputDir/${subject}_${visit}_DeformedNDI.nrrd 
+
+        if (-e $targetDTI && ! -e $targetNDI) then
+                echo mapping into atlas: $targetNDI:t
+
+		ResampleScalarVectorDWIVolume $ndiImage:s/_NDI/_FWF/ $targetNDI:s/NDI/FWF/ -R $DTIAtlas --hfieldtype displacement -H $DefField
+		ResampleScalarVectorDWIVolume $ndiImage:s/_NDI/_ODI/ $targetNDI:s/NDI/ODI/ -R $DTIAtlas --hfieldtype displacement -H $DefField
+		ResampleScalarVectorDWIVolume $ndiImage $targetNDI -R $DTIAtlas --hfieldtype displacement -H $DefField
+
+        endif
+end
+
+
+exit
+
