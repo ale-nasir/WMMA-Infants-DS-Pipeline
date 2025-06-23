@@ -1,0 +1,63 @@
+#!/bin/tcsh -f
+
+set BaseDir = /ASD/Autism2/IBIS1/IBIS/EP_infantDS_Studies/Proc_Data/DTI_analysis/FinalAtlas/MapInAtlas
+set DataDir = /ASD/Autism/IBIS/EP_infantDS_Studies/Proc_Data/
+
+foreach Scalar (NDI ODI FWF)
+    set ScalarImgFiles = ($DataDir/*/*/mri/native/dMRI/AMICO_NODDI/*_${Scalar}.nrrd)
+    # need to use the nrrd files as nii.gz have incorrect space information
+    
+    foreach ScalarIMG ($ScalarImgFiles)
+	echo Img - $ScalarIMG
+	set SbjId = `echo $ScalarIMG:t:r | sed "s/_${Scalar}//"`
+	#echo Subj - $SbjId
+
+	set AllTracts = (/ASD/Autism2/IBIS1/IBIS/EP_infantDS_Studies/Proc_Data/FinalAtlas/AutoTract/CleanedTracts/*.vtk)
+	foreach tract ($AllTracts)
+	    #echo $tract
+
+	    set DField = $BaseDir/DataInAtlas/${SbjId}*_GlobalDisplacementField.nrrd
+	    #echo $DField
+
+	    set OutFolder = $BaseDir/DTIFiberAnalyzer/Profiles/Cases/$SbjId
+	    if (! -e $OutFolder) mkdir -p $OutFolder
+
+	    set tractName = $tract:t:r
+	    set OutFiberName = $OutFolder/${SbjId}_${tractName}
+
+	    #You need this if you want to skip scans that were already done before	
+	    set OutFiberFAFVP = ${OutFiberName}_${Scalar}.fvp
+	    if (-e $OutFiberFAFVP) then
+		echo $tract:t $SbjId computed already, skipping
+		continue
+	    endif
+
+	    set OutFiber = ${OutFiberName}_${Scalar}.vtk
+		#echo $OutFiber
+
+	    set output_parametrized_fiber_file = $OutFolder:h:h/Fibers/${tractName}_parametrized.vtk
+	    set processed_fiber_file           = $OutFiber:s/.vtk/_processed.vtk/
+	    echo $processed_fiber_file
+	    
+	    if (! -e $processed_fiber_file) then
+		set cmd = "/tools/bin_linux64/fiberprocess --fiber_file $tract --displacement_field $DField --no_warp --scalarName $Scalar --ScalarImage $ScalarIMG --fiber_output $OutFiber --verbose"
+		echo $cmd
+		eval $cmd
+		set cmd = "/NIRAL/tools/pkg_install/DTIAtlasFiberAnalyzer-1.8.1/bin/FiberPostProcess --inputFiberFile $OutFiber --outputFiberFile $processed_fiber_file"
+		echo $cmd
+		eval $cmd
+	    endif
+
+	    set OutFiberFVP = $OutFiber:r.fvp
+	    if (! -e $OutFiberFVP) then
+		set cmd = "/NIRAL/tools/pkg_install/DTIAtlasFiberAnalyzer-1.8.1/bin/dtitractstat --input_fiber_file $processed_fiber_file --ouput_stats_file $OutFiberFVP --auto_plane_origin median --parameter_list $Scalar --scalarName $Scalar --output_parametrized_fiber_file $output_parametrized_fiber_file --bandwidth 3 --step_size 1  --echo"   
+		echo $cmd
+		eval $cmd
+		rm $processed_fiber_file:h/*__Clean.vtk
+	    endif
+	end
+    end
+end
+
+
+exit

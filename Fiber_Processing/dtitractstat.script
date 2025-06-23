@@ -1,0 +1,60 @@
+#!/bin/tcsh -f
+
+set BaseDir = /ASD/Autism2/IBIS1/IBIS/EP_infantDS_Studies/Proc_Data/DTI_analysis/FinalAtlas/MapInAtlas
+
+set ScalarImgFiles = ($BaseDir/Data/*lowShell_DTI.nrrd)
+
+mkdir -p $BaseDir/DTIFiberAnalyzer/Profiles/{Cases,FiberProfiles,Fibers,summaryProfiles}
+
+foreach ScalarIMG ($ScalarImgFiles)
+    echo $ScalarIMG
+    set SbjId = $ScalarIMG:t:s/.nrrd//:s/_masked_finalVC_lowShell_DTI//
+    #echo $SbjId
+
+    set AllTracts = (/ASD/Autism2/IBIS1/IBIS/EP_infantDS_Studies/Proc_Data/FinalAtlas/AutoTract/CleanedTracts/*.vtk)
+    foreach tract ($AllTracts)
+	#echo $tract
+
+	set DField = $BaseDir/DataInAtlas/${SbjId}*_GlobalDisplacementField.nrrd
+
+	#echo $DField
+
+	set OutFolder = $BaseDir/DTIFiberAnalyzer/Profiles/Cases/$SbjId
+	if (! -e $OutFolder) mkdir -p $OutFolder
+
+	set tractName = $tract:t:r
+	set OutFiberName = $OutFolder/${SbjId}_${tractName}
+
+	set OutFiber = ${OutFiberName}.vtk
+	#echo $OutFiber
+
+	#You need this if you want to skip scans that were already done before	
+	set OutFiberFAFVP = $OutFiber:r_md.fvp
+	if (-e $OutFiberFAFVP) then
+	    echo $tract:t $SbjId computed already, skipping
+	    continue
+	endif
+
+	set output_parametrized_fiber_file = $OutFolder:h:h/Fibers/${tractName}_parametrized.vtk
+	if (! -e $OutFiber:s/.vtk/_processed.vtk/) then
+	    set cmd = "/tools/bin_linux64/fiberprocess --fiber_file $tract --displacement_field $DField --no_warp --inputDTIVolume  $ScalarIMG --fiber_output $OutFiber --verbose"
+	    echo $cmd
+	    eval $cmd
+	    set cmd = "/NIRAL/tools/pkg_install/DTIAtlasFiberAnalyzer-1.8.1/bin/FiberPostProcess --inputFiberFile $OutFiber --outputFiberFile $OutFiber:s/.vtk/_processed.vtk/"
+	    echo $cmd
+	    eval $cmd
+	endif
+
+	set Scalar = ( fa rd md ad )
+	foreach currentScalar ($Scalar)
+	    set OutFiberFVP = $OutFiber:r_${currentScalar}.fvp
+	    if (! -e $OutFiberFVP) then
+		set cmd = "/NIRAL/tools/pkg_install/DTIAtlasFiberAnalyzer-1.8.1/bin/dtitractstat --input_fiber_file $OutFiber:s/.vtk/_processed.vtk/ --ouput_stats_file $OutFiberFVP --auto_plane_origin median --parameter_list $currentScalar --output_parametrized_fiber_file $output_parametrized_fiber_file --bandwidth 3 --step_size 1  --remove_clean_fiber --echo"   
+		echo $cmd
+		eval $cmd
+	    endif
+	end
+    end
+end
+
+exit

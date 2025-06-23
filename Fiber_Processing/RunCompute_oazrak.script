@@ -1,0 +1,22 @@
+#!/bin/bash
+
+
+__conda_setup="$('/NIRAL/tools/devel/linux/Anaconda/Anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/NIRAL/tools/devel/linux/Anaconda/Anaconda3/etc/profile.d/conda.sh" ]; then
+        . "/NIRAL/tools/devel/linux/Anaconda/Anaconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+
+conda activate DTIFiberAnalyzer
+
+python /ASD/Autism2/IBIS1/IBIS/EP_infantDS_Studies/Proc_Data/DTI_analysis/FinalAtlas/MapInAtlas/DTIFiberAnalyzer/Processing/ComputeFiberProfileSummary_DTI_NODDI_lex.py $@
+
+
+
+

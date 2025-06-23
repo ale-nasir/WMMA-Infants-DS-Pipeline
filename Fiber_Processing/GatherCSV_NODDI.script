@@ -1,0 +1,56 @@
+#!/bin/tcsh
+
+set BaseDir = /ASD/Autism2/IBIS1/IBIS/EP_infantDS_Studies/Proc_Data/DTI_analysis/FinalAtlas/MapInAtlas/DTIFiberAnalyzer/Profiles
+
+set Sbjlist = $BaseDir/Cases/SbjList.csv
+if (-e $Sbjlist) then
+    rm $Sbjlist
+endif
+echo SbjID >> $Sbjlist
+
+set Subjects = ($BaseDir/Cases/??????_V*) 
+foreach Subject ($Subjects)
+    set Sbj = $Subject:t
+    echo $Sbj >> $Sbjlist
+end
+
+set Tracts = (/ASD/Autism2/IBIS1/IBIS/EP_infantDS_Studies/Proc_Data/DTI_analysis/FinalAtlas/MapInAtlas/DTIFiberAnalyzer/OldProcessing/NewCases/Fibers/*_parametrized.vtk)
+
+foreach Tract ($Tracts)
+    set tract = $Tract:t:s/_parametrized.vtk//
+    echo $tract
+    set outdir = $BaseDir/FiberProfiles/$tract
+    if (! -e $outdir) then
+	mkdir $outdir
+    endif
+    
+    set DTIProperty = 'NDI'
+    set InputDir = $BaseDir/Cases
+    set OutDir = $BaseDir/FiberProfiles/$tract
+
+    set target = $OutDir/${DTIProperty}_$tract.csv
+    if (! -e $target) then
+	/ASD/Autism2/IBIS1/IBIS/EP_infantDS_Studies/Proc_Data/DTI_analysis/FinalAtlas/MapInAtlas/DTIFiberAnalyzer/Processing/RunGather.script $DTIProperty $Sbjlist $tract $InputDir $OutDir
+    endif
+    
+    set DTIProperty = 'ODI'
+    set InputDir = $BaseDir/Cases
+    set OutDir = $BaseDir/FiberProfiles/$tract
+    
+    set target = $OutDir/${DTIProperty}_$tract.csv
+    if (! -e $target) then
+	/ASD/Autism2/IBIS1/IBIS/EP_infantDS_Studies/Proc_Data/DTI_analysis/FinalAtlas/MapInAtlas/DTIFiberAnalyzer/Processing/RunGather.script $DTIProperty $Sbjlist $tract $InputDir $OutDir 
+    endif
+
+    set DTIProperty = 'FWF'
+    set InputDir = $BaseDir/Cases
+    set OutDir = $BaseDir/FiberProfiles/$tract
+    
+    set target = $OutDir/${DTIProperty}_$tract.csv
+    if (! -e $target) then
+	/ASD/Autism2/IBIS1/IBIS/EP_infantDS_Studies/Proc_Data/DTI_analysis/FinalAtlas/MapInAtlas/DTIFiberAnalyzer/Processing/RunGather.script $DTIProperty $Sbjlist $tract $InputDir $OutDir 
+    endif
+
+end
+
+exit
