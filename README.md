@@ -6,6 +6,8 @@ This repository is organized into four main components labelled: Preliminary QC,
 Before diving into the four components, note that DICOMs are first converted to .nrrd format using DWIConvert_4.6.0. 
 The specific script used is not necessary for reproducibility and is therefore not included — you may use any tool of your choice to complete this conversion. 
 
+
+
 PRELIM_QC: After obtaining .nrrd files, a preliminary quality control (QC) step is performed for each subject 
 - 101_AP and 101_PA are checked using 3D Slicer 5.6.2 
 - 101_PA_B0 is checked using DTIPrep 1.2.8 
@@ -26,6 +28,8 @@ This script calls the following as well:
 
 Automated brain masks are then reviewed and manually corrected using ITK-SNAP 4.0.2. 
 
+
+
 FINAL_QC: Final QC is conducted after the dmriprep_0.5.7 folder is generated for each subject.  
 - Brain tracts are reviewed using 3D Slicer 5.6.2 
 - Poor-quality gradients are manually removed from the full set of 101 gradients using dmriprep 
@@ -41,7 +45,9 @@ After Final QC, two scripts are executed:
 4_MoreQCstats.script -> Computes motion stat csv 
 
 5_NODDI.script -> Computes NODDI maps (creates AMICO folders for subjects) 
-   - Calls Run_AMICO_wrapper.script 
+   - Calls Run_AMICO_wrapper.script
+
+
 
 ATLAS_MAPPING : Two scripts are executed
 
@@ -49,7 +55,9 @@ ATLAS_MAPPING : Two scripts are executed
    
 3_MapNODDItoAtlas.script -> Maps all NODDI data into atlas 
 
-FIBER_PROCESSING : 5 scripts are executed
+
+
+FIBER_PROCESSING : Five scripts are executed
 
 dtitractstat.script -> Generates fiber profiles for DTI maps 
 
