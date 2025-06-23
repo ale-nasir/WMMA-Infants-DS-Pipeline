@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# AMICO NODDI computation - adjust kernels and threads below
+# round b-values to nearest 100 (adjust with bStep)
+
+__conda_setup="$('/proj/NIRAL/tools/Anaconda/Anaconda_NIRAL/bin/conda' 'shell.bash' 'ho
+ok' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/proj/NIRAL/tools/Anaconda/Anaconda_NIRAL/etc/profile.d/conda.sh" ]; then
+        . "/proj/NIRAL/tools/Anaconda/Anaconda_NIRAL/etc/profile.d/conda.sh"
+    else
+        export PATH="/proj/NIRAL/tools/Anaconda/Anaconda_NIRAL/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+
+conda activate amico
+module remove python
+
+NODDIscript=$1/AMICO_NODDI.py
+
+numThreads=8
+kernels=2000
+bStep=100
+
+echo "import numpy as np" > $NODDIscript
+echo "import amico" >> $NODDIscript
+echo "bvec = np.loadtxt('$2_dwi.bvec')" >> $NODDIscript
+echo "bvecT = np.transpose(bvec)" >> $NODDIscript
+echo "np.savetxt ('$2_dwi.bvecT',bvecT)" >> $NODDIscript
+echo "bval = np.loadtxt('$2_dwi.bval')" >> $NODDIscript
+echo "bvalT = np.transpose(bval)" >> $NODDIscript
+echo "np.savetxt ('$2_dwi.bvalT',bvalT)" >> $NODDIscript
+echo "amico.setup()" >> $NODDIscript
+echo "amico.util.fsl2scheme('$2_dwi.bvalT','$2_dwi.bvecT',bStep = $bStep)" >> $NODDIscript
+echo "ae = amico.Evaluation()" >> $NODDIscript
+echo "ae.set_config('DTI_fit_method','WLS')" >> $NODDIscript
+echo "ae.set_config('nthreads',$numThreads)" >> $NODDIscript
+echo "ae.set_config('BLAS_nthreads',$numThreads)" >> $NODDIscript
+echo "ae.load_data('$2_dwi.nii.gz', '$2_dwi.scheme', mask_filename='$2_mask.nii.gz', b0_thr=0)" >> $NODDIscript
+echo "ae.set_model('NODDI')" >> $NODDIscript
+echo "ae.generate_kernels(ndirs=$kernels,regenerate=True)" >> $NODDIscript
+echo "ae.load_kernels()" >> $NODDIscript
+echo "ae.fit()" >> $NODDIscript
+echo "ae.save_results()" >> $NODDIscript
+
+cd $1
+python $NODDIscript
+
+exit
+

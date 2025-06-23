@@ -1,0 +1,96 @@
+#!/bin/tcsh 
+
+set nonomatch
+
+set DATADIR = /proj/NIRAL/studies/IBIS/EP/EP_Data
+set PROCDIR = /proj/NIRAL/studies/IBIS/EP/processing/dMRI
+
+set BrainMaskPrefix = Brainmask_0.5.7
+set NODDIPrefix = AMICO_NODDI
+
+echo computing NODDI for VC data
+
+foreach DWIfile ($DATADIR/*/V*/mri/native/dMRI/dmriprep_0.5.7/VC*/*_101dir_QCed_QCed.nrrd)
+    if (! -e $DWIfile) then
+	echo $DWIfile does not exist
+	continue
+    endif
+
+    set dwiFolder = $DWIfile:h:h:h
+    set StripFolder = $dwiFolder/$BrainMaskPrefix
+    if (! -e $StripFolder) mkdir $StripFolder
+
+    set NODDIFolder = $dwiFolder/$NODDIPrefix
+    if (! -e $NODDIFolder) mkdir $NODDIFolder
+
+    set baseName = $StripFolder/$DWIfile:t:s/_101dir_QCed_QCed.nrrd//
+    set baseFileName = $baseName:t
+    set manualMaskNII = ${baseName}_brainmask_NoRim_edit.nii.gz
+    set manualMask = ${baseName}_brainmask_NoRim_edit.nrrd
+    set manualMaskSS = ${baseName}_brainmask_SynthStrip_edit.nrrd
+    set manualMaskSSNII = ${baseName}_brainmask_SynthStrip_edit.nii.gz
+    set ODIImage = $NODDIFolder/${baseFileName}_ODI.nii.gz
+    set ODIImageNRRD = $NODDIFolder/${baseFileName}_ODI.nrrd
+
+    if (! -e $manualMask && ! -e $manualMaskNII && -e $manualMaskSSNII) then
+	#echo using $manualMaskSSNII
+	set manualMaskNII = $manualMaskSSNII
+	set manualMask = $manualMaskSS
+    endif
+
+    if (-e $manualMask && ! -e $manualMaskNII) convertITKformats $manualMask  $manualMaskNII
+
+    if (! -e $manualMaskNII) then
+        echo no manual Mask $manualMaskNII
+        continue
+    endif
+    
+    #echo computing NODDI for $DWIfile
+    
+
+    if (! -e $ODIImage) then
+	set DWIfileNIFTI = $NODDIFolder/${baseFileName}_dwi.nii.gz
+	if (! -e $DWIfileNIFTI) then
+	    echo converting to NIFTI $DWIfile
+	    echo Run_dmriprep_convert_wrapper.script $DWIfile $DWIfileNIFTI:h/convTmp $DWIfileNIFTI:t:r:r
+	    $PROCDIR/Run_dmriprep_convert_wrapper.script $DWIfile $DWIfileNIFTI:h/convTmp $DWIfileNIFTI:t:r:r
+	    mv  $DWIfileNIFTI:h/convTmp/*QCed.bval $DWIfileNIFTI:r:r.bval
+	    mv  $DWIfileNIFTI:h/convTmp/*QCed.bvec $DWIfileNIFTI:r:r.bvec
+	    mv  $DWIfileNIFTI:h/convTmp/*QCed.nii.gz $DWIfileNIFTI
+	    rm -r $DWIfileNIFTI:h/convTmp
+	endif
+
+	cp $manualMaskNII $NODDIFolder/${baseFileName}_mask.nii.gz
+	
+	echo estimating NODDI $NODDIFolder $baseFileName
+        $PROCDIR/Run_AMICO_wrapper.script $NODDIFolder $baseFileName
+
+	mv $NODDIFolder/AMICO/NODDI/fit_FWF.nii.gz $ODIImage:s/_ODI/_FWF/
+	mv $NODDIFolder/AMICO/NODDI/fit_NDI.nii.gz $ODIImage:s/_ODI/_NDI/
+	mv $NODDIFolder/AMICO/NODDI/fit_ODI.nii.gz $ODIImage
+	
+    endif
+
+    if (! -e $ODIImageNRRD) then
+	echo hacking header $ODIImageNRRD
+	# processing strips header information  -> need to hack header, should be the same as DWI
+	convertITKformats $ODIImage:s/_ODI/_FWF/ $ODIImageNRRD:s/_ODI/_FWF/
+	convertITKformats $ODIImage:s/_ODI/_NDI/ $ODIImageNRRD:s/_ODI/_NDI/
+	convertITKformats $ODIImage $ODIImageNRRD
+
+	#hack space directions
+	set badspace = `unu head $ODIImageNRRD | grep "space directions:"`
+	set goodspace = `unu head $manualMask | grep "space directions:"`
+	bin_subst.pl "$badspace[3]:s/(//:s/)//" "$goodspace[3]:s/(//:s/)//" $ODIImageNRRD $ODIImageNRRD:s/_ODI/_NDI/ $ODIImageNRRD:s/_ODI/_FWF/
+	bin_subst.pl "$badspace[4]:s/(//:s/)//" "$goodspace[4]:s/(//:s/)//" $ODIImageNRRD $ODIImageNRRD:s/_ODI/_NDI/ $ODIImageNRRD:s/_ODI/_FWF/
+	bin_subst.pl "$badspace[5]:s/(//:s/)//" "$goodspace[5]:s/(//:s/)//" $ODIImageNRRD $ODIImageNRRD:s/_ODI/_NDI/ $ODIImageNRRD:s/_ODI/_FWF/
+	rm $ODIImageNRRD:h/*~
+	
+    endif
+end
+
+
+
+
+
+exit

@@ -1,0 +1,40 @@
+#!/bin/tcsh -f
+
+set nonomatch
+
+set BaseDir = /ASD/Autism/IBIS/EP_infantDS_Studies/
+set DATADIR = $BaseDir/Proc_Data
+set ProcessDIR = $BaseDir/processing_EPinfDS/dMRI
+
+
+echo gathering reports
+set report = $ProcessDIR/allQC_report.csv
+if (-e $report) rm $report
+
+cat $DATADIR/*/*//mri/native/dMRI/dmriprep_0.5.7/*_QC_report.csv >! tmp.txt
+
+head -1 tmp.txt >! $report
+grep  -v image_name_1 tmp.txt >> $report
+
+rm tmp.txt
+
+echo gathering VC data
+
+set report =  $ProcessDIR/VC_QC_report.csv
+echo "file,RemainingGradientsBeforeVC,RemainingGradientsVC" >! $report
+
+foreach i ($DATADIR/*/*/mri/native/dMRI/dmriprep_0.5.7/VC*/*_QCed_QCed.nrrd)
+
+    #echo doing $i
+
+    set sizelist = (`unu head $i | grep sizes`)
+    set numRemainingGradientsVC = $sizelist[5]
+
+    set sizelist = (`unu head $i:h:h/$i:t:s/_QCed// | grep sizes`)
+    set numRemainingGradientsBeforeVC = $sizelist[5]
+
+    echo "$i:t,$numRemainingGradientsBeforeVC,$numRemainingGradientsVC" >> $report
+end
+
+
+exit
