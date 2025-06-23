@@ -1,0 +1,26 @@
+#!/bin/bash
+
+#usage: script APfile PAfile outputfolder output-filename-base
+
+__conda_setup="$('/proj/NIRAL/tools/Anaconda/anaconda3_DTIPlayground/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/proj/NIRAL/tools/Anaconda/anaconda3_DTIPlayground/etc/profile.d/conda.sh" ]; then
+        . "/proj/NIRAL/tools/Anaconda/anaconda3_DTIPlayground/etc/profile.d/conda.sh"
+    else
+        export PATH="/proj/NIRAL/tools/Anaconda/anaconda3_DTIPlayground/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+
+module add fsl/6.0.6
+module remove qt
+module remove python
+
+echo sbatch -p general -N 1 -n 6 --mem 20g -t 2:00:00 --wrap="dmriprep run  -i $1 -o $2 -p /proj/NIRAL/studies/IBIS/EP/processing/dMRI/protocol_tractography_0.4.4.yml -f NRRD --num-threads 6 --output-file-base $3"
+
+sbatch -p general -N 1 -n 6 --mem 20g -t 2:00:00 --wrap="dmriprep run  -i $1 -o $2 -p /proj/NIRAL/studies/IBIS/EP/processing/dMRI/protocol_tractography_0.4.4.yml -f NRRD --num-threads 6 --output-file-base $3"
+
+exit
+
