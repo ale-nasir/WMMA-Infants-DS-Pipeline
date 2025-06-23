@@ -15,6 +15,7 @@ During this step, the number of gradients, artifacts, and motion are assessed. S
 - There is a severe reference image artifact or significant motion in the cerebrum 
 
 Two scripts are run after preliminary QC:  
+
 2_dmriprep.script -> Performs automated QC, eddy current correction, susceptibility correction, and generates QC tractography. It creates a dmriprep_0.5.7 folder per passing subject. 
 This script calls the following as well:  
    - Run_dmriprep_convert_wrapper.script 
