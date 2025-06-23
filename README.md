@@ -11,8 +11,8 @@ PRELIM_QC: After obtaining .nrrd files, a preliminary quality control (QC) step 
 - 101_PA_B0 is checked using DTIPrep 1.2.8 
 
 During this step, the number of gradients, artifacts, and motion are assessed. Subjects are excluded if: 
--Fewer than 70% of gradients remain 
--There is a severe reference image artifact or significant motion in the cerebrum 
+- Fewer than 70% of gradients remain 
+- There is a severe reference image artifact or significant motion in the cerebrum 
 
 Two scripts are run after preliminary QC:  
 2_dmriprep.script 
