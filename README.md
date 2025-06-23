@@ -1,37 +1,62 @@
-This repository contains all scripts used for the paper "Early White Matter Microstructure Alterations in Infants with Down Syndrome" for reproduiblity purposes
+This repository contains all scripts used for the paper "Early White Matter Microstructure Alterations in Infants with Down Syndrome", for reproducibility purposes.
 
+Overview: 
+This repository is organized into four main components labelled: Preliminary QC, Final QC, Atlas Mapping and Fiber Processing
 
-Overview: This repository is organized into 4 main components 
+Before diving into the four components, note that DICOMs are first converted to .nrrd format using DWIConvert_4.6.0.
+The specific script used is not necessary for reproducibility and is therefore not included — you may use any tool of your choice to complete this conversion.
 
-Scan conversions: DICOMs are converted to nrrd per DWIConvert_4.6.0. Tbe script used is not necesary for reporducibility purposes and thus is not included - you may use whatever tool you like to complete this conversion. 
+PRELIM_QC: After obtaining .nrrd files, a preliminary quality control (QC) step is performed for each subject
+-101_AP and 101_PA are checked using 3D Slicer 5.6.2
+-101_PA_B0 is checked using DTIPrep 1.2.8
 
-Preliminary QC: AFter obtaining nrdd files, a preliminary quality control is done for each subject on their 101_AP, 101_PA using 3D Slicer 5.6.2 and 101_PA_B0 using DTIPrep 1.2.8. During this preliminary quality control, number of gradients, artifacts and motion are checked. Subjects are excluded if they have below a 70% threshold for number of gradients or if there is a severe reference image artifact/motion in the cerebrum. Subjects that pass this step have nrrd file links created. 
+During this step, the number of gradients, artifacts, and motion are assessed. Subjects are excluded if:
+-Fewer than 70% of gradients remain
+-There is a severe reference image artifact or significant motion in the cerebrum
 
-Two scripts are run after this is completed: 
-1. 2_dmriprep.script => conducts automated QC, eddy current, susceptiblity correction and generates QC tractogrpahy. It creates dmriprep_0.5.7 folders for each passing subject.
-   a. Run_dmriprep_convert_wrapper.script* 
-   b. Run_dmriprep_tract_wrapper.script*
-   c. Run_dmriprep_wrapper.script*
-2. 3_DWIMask_NIRAL.script => creates low-shell DWI (for tensor computation) and automated DWI masks (applying them as well). The end result is a subject specific folder labelled Brainmask_0.5.7.
+Two scripts are run after preliminary QC:
+2_dmriprep.script
+Performs automated QC, eddy current correction, susceptibility correction, and generates QC tractography. It creates a dmriprep_0.5.7 folder per passing subject.
+This script calls the following as well: 
+   Run_dmriprep_convert_wrapper.script
+   Run_dmriprep_tract_wrapper.script
+   Run_dmriprep_wrapper.script
 
-Automated brainmasks are reviewed and if needed, manually corrected using ITK-SNAP 4.0.2
+3_DWIMask_NIRAL.script
+Creates low-shell DWI images (for tensor computation) and generates automated DWI brain masks. Final output is a subject-specific Brainmask_0.5.7 folder.
 
-Final QC: Final quality control is done for each subject after their dmriprep_0.5.7 folder has been created. Brain tracts are reviewed using Slicer 5.6.2 and bad gradients from the complete set of 101 gradients are manually removed using dmriprep. Subjects at this stage fail either because the brain tracts were interrupted or if too many gradients were manually removed (70% threshold).
+Automated brain masks are then reviewed and manually corrected using ITK-SNAP 4.0.2.
 
-*** Note that at this stage is also when we make notes about the extent of the temporal arc artifact as decirbed in our paper. If the temporal arc artifact is impacting the frontal lobe of the subject, then that subject is excluded during this step. 
+FINAL_QC: Final QC is conducted after the dmriprep_0.5.7 folder is generated for each subject.
+-Brain tracts are reviewed using 3D Slicer 5.6.2
+-Poor-quality gradients are manually removed from the full set of 101 gradients using dmriprep
+-Presence and extent of the arc artifact in the temporal and frontal lobes
 
-After Final QC is completed, two scripts are run: 
-1. 4_MoreQCstats.script => computes motion stat csv
-2. 5_NODDI.script => computes NODDI maps (creation of AMICO folder for subjects)
-   a. Run_AMICO_wrapper.script*
+Subjects are excluded at this stage if:
+-Brain tracts show major interruptions
+-More than 30% of gradients must be removed
+-Frontal lobe is impacted by the temporal arc artifact
 
-Mapping, FiberProfiles and FiberAverages
-1. 2_MapOtherDataInAtlas.script => Mapping all data into DTI atlas with tracts
-2. 3_MapNODDItoAtlas.script => Mapping all NODDI data into atlas
-3. dtitractstat.script => Generates fiber profiles for DTI maps
-4. dtitractstat_NODDI.script => Generates fiber profiles for NODDI maps
-5. GatherCSV_NODDI.script => Generates CSV for NODDI maps  
-   a. RunGather.script called by GatherCSV_NODDI.script 
-7.   GatherCSV.script => Generates CSV for DTI profiles 
-     a. RunGather.script called by GatherCSV.script 
-9.   RunCompute_oazrak.script => Computing tract averages for subjects 
+After Final QC, two scripts are executed:
+4_MoreQCstats.script => Computes motion stat csv
+
+5_NODDI.script => Computes NODDI maps (creates AMICO folders for subjects)
+   a. calls Run_AMICO_wrapper.script
+
+ATLAS_MAPPING
+2_MapOtherDataInAtlas.script => Maps all data into DTI atlas with tracts
+   
+3_MapNODDItoAtlas.script => Maps all NODDI data into atlas
+
+FIBER_PROCESSING
+dtitractstat.script => Generates fiber profiles for DTI maps
+
+dtitractstat_NODDI.script => Generates fiber profiles for NODDI maps
+
+GatherCSV_NODDI.script => Generates CSV for NODDI maps  
+   a. calls RunGather.script
+   
+GatherCSV.script => Generates CSV for DTI profiles 
+     a. calls RunGather.script
+     
+RunCompute_oazrak.script => Computing tract averages for subjects 
