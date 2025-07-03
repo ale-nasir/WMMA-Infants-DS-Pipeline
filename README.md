@@ -70,3 +70,11 @@ GatherCSV.script -> Generates CSV for DTI profiles
    - Calls RunGather.script 
      
 RunCompute_oazrak.script -> Computes tract averages for subjects 
+
+----
+
+ARC ARTIFACT Details: The arc artifact was present at varying severities across subjects. It was either absent, limited to the temporal region, or extended from the temporal into the prefrontal region. To correct for this artifact, the affected region was manually segmented in 10 subjects using ITK-SNAP. This mask was then propagated to the DWI atlas for the entire sample. As noted earlier, subjects were excluded if the arc artifact was severe and extended into the prefrontal region during Final QC.
+
+We then identified which tracts intersected the arc artifact mask. Any segments of affected tracts were cropped during the fiber profile cropping step. This cropping was applied to all subjects—regardless of whether their individual scans showed the artifact—to ensure consistency in fiber profile length across the cohort, allowing for valid group comparisons.
+
+The tracts affected included the tapetum of the corpus callosum, bilateral inferior longitudinal fasciculi, bilateral fornices, and bilateral uncinate fasciculi. Cropping details are outlined below.
