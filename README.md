@@ -37,7 +37,7 @@ FINAL_QC: Final QC is conducted after the dmriprep_0.5.7 folder is generated for
 
 Subjects are excluded at this stage if: 
 - Brain tracts show major interruptions 
-- More than 30% of gradients must be removed 
+- More than 20% of gradients must be removed 
 - Frontal lobe is impacted by the temporal arc artifact 
 
 After Final QC, two scripts are executed: 
