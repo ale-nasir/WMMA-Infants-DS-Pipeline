@@ -77,4 +77,4 @@ ARC ARTIFACT Details: The arc artifact was present at varying severities across 
 
 We then identified which tracts intersected the arc artifact mask. Any segments of affected tracts were cropped during the fiber profile cropping step. This cropping was applied to all subjects—regardless of whether their individual scans showed the artifact—to ensure consistency in fiber profile length across the cohort, allowing for valid group comparisons.
 
-The tracts affected included the tapetum of the corpus callosum, bilateral inferior longitudinal fasciculi, bilateral fornices, and bilateral uncinate fasciculi. Cropping details are outlined below.
+The tracts affected included the tapetum of the corpus callosum, bilateral inferior longitudinal fasciculi, bilateral fornices, and bilateral uncinate fasciculi.
